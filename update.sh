@@ -120,19 +120,10 @@ remove_unwanted_packages() {
         \rm -rf ./package/istore
     fi
 
-    # ipq60xx/50xx不支持NSS offload mnet_rx
-    #if grep -q "nss_packages" "$BUILD_DIR/$FEEDS_CONF"; then
-    #    local nss_packages_dirs=(
-    #        "$BUILD_DIR/feeds/luci/protocols/luci-proto-quectel"
-    #        "$BUILD_DIR/feeds/packages/net/quectel-cm"
-    #        "$BUILD_DIR/feeds/packages/kernel/quectel-qmi-wwan"
-    #    )
-    #    for dir in "${nss_packages_dirs[@]}"; do
-    #        if [[ -d "$dir" ]]; then
-    #            \rm -rf "$dir"
-    #        fi
-    #    done
-    #fi
+    # ipq60xx不支持NSS offload mnet_rx
+    if grep -q "nss_packages" "$BUILD_DIR/$FEEDS_CONF"; then
+        rm -rf "$BUILD_DIR/feeds/nss_packages/wwan"
+    fi
 
     # 临时放一下，清理脚本
     if [ -d "$BUILD_DIR/target/linux/qualcommax/base-files/etc/uci-defaults" ]; then
@@ -522,7 +513,7 @@ update_package() {
         if [ -z $PKG_REPO ]; then
             return 0
         fi
-        local PKG_VER=$(curl -sL "https://api.github.com/repos/$PKG_REPO/releases" | jq -r "map(select(.prerelease|not)) | first | .tag_name")
+        local PKG_VER=$(curl -sL "https://api.github.com/repos/$PKG_REPO/releases" | jq -r "map(select(.prerelease == true)) | first | .tag_name")
         PKG_VER=$(echo $PKG_VER | grep -oE "[\.0-9]{1,}")
 
         local PKG_NAME=$(awk -F"=" '/PKG_NAME:=/ {print $NF}' $mk_path | grep -oE "[-_:/\$\(\)\?\.a-zA-Z0-9]{1,}")
@@ -791,6 +782,7 @@ main() {
     update_script_priority
     fix_easytier
     update_geoip
+    update_package "xray-core"
     # update_proxy_app_menu_location
     # update_dns_app_menu_location
 }

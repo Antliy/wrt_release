@@ -400,9 +400,6 @@ update_pw() {
     local smartdns_lua_path="$pw_share_dir/helper_smartdns_add.lua"
     local rules_dir="$pw_share_dir/rules"
 
-    # 删除 helper_smartdns_add.lua 文件中的特定行
-    [ -f "$smartdns_lua_path" ] && sed -i '/force-qtype-SOA 65/d' "$smartdns_lua_path"
-
     # 清空chnlist
     [ -f "$rules_dir/chnlist" ] && echo "" >"$rules_dir/chnlist"
 }
@@ -513,7 +510,7 @@ update_package() {
         if [ -z $PKG_REPO ]; then
             return 0
         fi
-        local PKG_VER=$(curl -sL "https://api.github.com/repos/$PKG_REPO/releases" | jq -r "map(select(.prerelease == true)) | first | .tag_name")
+        local PKG_VER=$(curl -sL "https://api.github.com/repos/$PKG_REPO/releases" | jq -r '.[0].tag_name')
         PKG_VER=$(echo $PKG_VER | grep -oE "[\.0-9]{1,}")
 
         local PKG_NAME=$(awk -F"=" '/PKG_NAME:=/ {print $NF}' $mk_path | grep -oE "[-_:/\$\(\)\?\.a-zA-Z0-9]{1,}")
